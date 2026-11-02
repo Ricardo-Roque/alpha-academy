@@ -70,7 +70,8 @@ Depois de trocar imagens ou capturas, rode (na raiz do repositório): `python _s
 
 Resumo; detalhes em `QUIZ_AUDIT.md`:
 
-- Checkout/pagamento **não** reproduzido (fora do escopo pedido); "Obter meu plano" rola até os planos.
+- Sem captura de e-mail: o build remove as 6 telas de e-mail e a de assinatura de e-mails; depois do carregamento o funil vai direto para a tela do nome (o `QUIZ_AUDIT.md` ainda lista essas telas, do original).
+
 - Telemetria (`event.fx2.io`), geolocalização por IP, verificação de e-mail já cadastrado: não reproduzidos.
 - Páginas legais (`/terms`, `/privacy`, `/subterms`) abrem no site original, que só as publica em inglês.
 - Animação Lottie da raspadinha e animações do gráfico de plano: quadro estático / CSS.
@@ -78,7 +79,7 @@ Resumo; detalhes em `QUIZ_AUDIT.md`:
 ## Pendências
 
 - [ ] Deixar a oferta do caminho "Casado" igual à referência (hoje o card Status mostra "Complicado" e a copy foi ajustada à mão; revisar textos como "Reinicie a dinâmica" e "Ela te deseja de novo", que não fazem sentido para quem é casado).
-- [ ] Definir os planos e preços da oferta (hoje são os da captura: 12, 4 e 24 semanas, em R$; valores com ponto decimal, como "R$5.44", ainda sem formatação pt-BR).
+- [x] Preço único de R$ 47,00 ("Plano de 4 semanas", card igual ao do CalmKids), pagamento único sem renovação; gerado pelo `_src/build.cjs` em todas as variantes da oferta.
 - [ ] Aplicar a formatação do nome (primeira letra maiúscula) em todas as telas que exibem o nome. Hoje só a tela de pré-oferta formata; a oferta e o código promocional mostram o nome como foi digitado.
-- [ ] Configurar o checkout em modo de teste (o checkout não faz parte desta reprodução; "Obter meu plano" só rola até os planos).
+- [x] Checkout: os botões "Obter meu plano" levam à Payt (`CHECKOUT_URL` em `js/script.js`), repassando UTMs, `fbclid`, `gclid`, `src`, `sck` e `xcod` da URL de entrada.
 - [ ] Revisar os depoimentos/avaliações antes de publicar (nomes, datas fixas como "20 de Junho de 2026" e textos vêm da captura).

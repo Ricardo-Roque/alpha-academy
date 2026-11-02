@@ -217,7 +217,7 @@
     bindCommon(s);
     var binder = {
       singleChoice: bindChoice, landing: bindChoice, multiChoice: bindMulti, textInput: bindText,
-      emailScreen: bindEmail, loader: bindLoader, custom: bindCustom, summaryStatementScreen: bindSummary
+      loader: bindLoader, custom: bindCustom, summaryStatementScreen: bindSummary
     }[s.type];
     if (binder) binder(s, id);
     else bindContinue(s);
@@ -311,57 +311,11 @@
     input.focus();
   }
 
-  // ---------------------------------------------------------------- e-mail
-  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  function bindEmail(s) {
-    var input = qs("input[type=email]");
-    var btn = qs("#qz-button-continue");
-    var clear = qs(".icon-close");
-    if (!input || !btn) return;
-    var holder = input.closest(".relative.w-full.z-40") || input.parentElement.parentElement;
-    var errEl = null;
-    input.value = state.vars.email || "";
-    function valid() { return EMAIL_RE.test(input.value.trim()); }
-    function showError(on) {
-      input.classList.toggle("--invalid", on);
-      if (on && !errEl) {
-        errEl = document.createElement("p");
-        errEl.className = "ml-7 mt-2 w-full text-left text-xs text-token-danger-700-3";
-        errEl.textContent = "O e-mail deve ser válido";
-        holder.appendChild(errEl);
-      } else if (!on && errEl) { errEl.remove(); errEl = null; }
-    }
-    function sync() {
-      if (errEl && valid()) showError(false);
-    }
-    function submit() {
-      if (!valid()) return showError(true);
-      setVar("email", input.value.trim());
-      navigate(s.next);
-    }
-    input.addEventListener("input", sync);
-    input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); });
-    if (clear) clear.addEventListener("click", function () { input.value = ""; sync(); input.focus(); });
-    btn.addEventListener("click", submit);
-    sync();
-  }
-
-  // ---------------------------------------------------------------- telas "custom": assinatura de e-mails e raspadinha
+  // ---------------------------------------------------------------- telas "custom": raspadinha
   function bindCustom(s) {
-    if (s.name === "subscribePage") return bindSubscribe(s);
     if (s.name === "scratchPage") return bindScratch(s);
     bindContinue(s);
   }
-  function bindSubscribe(s) {
-    var buttons = qsa("main button");
-    buttons.forEach(function (b, i) {
-      b.addEventListener("click", function () {
-        setVar("email_subscription", i === 0);
-        navigate(s.next);
-      });
-    });
-  }
-
   // ---- raspadinha ---------------------------------------------------------------------------------------
   // Animação de dica (mão + rastro): mesma animação do Lottie original (/lottie/scratch-pre-offer.json, 60 fps, laço de 119 quadros).
   // A mão segue 7 posições com a curva cubic-bezier(.5,.35,.15,1); o rastro é um "trim path" linear de 0 a 100% em 120,27 quadros.
@@ -773,11 +727,20 @@
   }
 
   // ---------------------------------------------------------------- oferta (antes do checkout)
-  var OFFER_PLANS = [
-    { id: "product-1", today: "230.00", renew: "490", days: 90 },
-    { id: "product-2", today: "118.00", renew: "315", days: 30 },
-    { id: "product-3", today: "430.00", renew: "660", days: 180 }
-  ];
+  // Preço único (R$ 39,70): o card e o texto legal vêm prontos do build (_src/build.cjs), sem seleção de plano.
+  var CHECKOUT_URL = "https://checkout.payt.com.br/0c0a1c8436f1a850fa58f9db452f70ed";
+  // Parâmetros do anúncio repassados ao checkout (como no CalmKids/CalmBaby). A UTMify já faz isso;
+  // esta lista é a garantia caso o script dela seja bloqueado (ex.: bloqueador de anúncios).
+  var TRACKING_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id", "fbclid", "gclid", "src", "sck", "xcod"];
+  function checkoutUrl() {
+    var url = new URL(CHECKOUT_URL);
+    var current = new URLSearchParams(location.search);
+    TRACKING_PARAMS.forEach(function (key) {
+      var value = current.get(key);
+      if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);
+    });
+    return url.toString();
+  }
   function renderOffer() {
     if (!OFFER) {
       showLoader();
@@ -794,16 +757,11 @@
     window.scrollTo(0, 0);
     hideLoader();
     fillVars();
-    // O checkout (pagamento) não faz parte desta reprodução: os botões "Obter meu plano" levam à seleção de planos.
-    var scrollBox = qs(".h-full.overflow-y-auto");
+    // Todos os botões "Obter meu plano" levam ao checkout da Payt
     qsa("#qz-button-continue").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var target = qs("#offerProductBlock");
-        if (target && target.scrollIntoView) target.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
+      b.addEventListener("click", function () { location.href = checkoutUrl(); });
     });
     bindOfferTimer();
-    bindOfferPlans();
     bindOfferFaq();
   }
   var OFFER_SECONDS = 600;
@@ -837,47 +795,6 @@
       });
     }
     onCleanup(function () { clearInterval(iv); });
-  }
-  function bindOfferPlans() {
-    var rows = {};
-    OFFER_PLANS.forEach(function (p) { rows[p.id] = qsa("#" + p.id); });
-    function setSel(id) {
-      OFFER_PLANS.forEach(function (p) {
-        rows[p.id].forEach(function (root) { paintPlan(root, p.id === id); });
-      });
-      var plan = OFFER_PLANS.filter(function (p) { return p.id === id; })[0];
-      qsa("p, span, div").forEach(function (el) {
-        if (el.children.length === 0 || el.querySelector(":scope > .text-var")) return;
-      });
-      updateLegal(plan);
-    }
-    OFFER_PLANS.forEach(function (p) {
-      rows[p.id].forEach(function (root) { root.addEventListener("click", function () { setSel(p.id); }); });
-    });
-    setSel("product-2");
-  }
-  function paintPlan(root, on) {
-    root.setAttribute("aria-checked", on ? "true" : "false");
-    var box = root.firstElementChild;
-    function toggle(el, cls, add) { if (el) el.classList.toggle(cls, add); }
-    toggle(box, "!bg-white", on); toggle(box, "!ring-token-warning-500", on);
-    var radio = qs(".size-6.rounded-full", root); toggle(radio, "!border-token-warning-500", on);
-    var dot = qs(".size-\\[12px\\]", root); toggle(dot, "!bg-token-warning-500", on);
-    var desc = qs(".radio-description", root); toggle(desc, "--active", on);
-    var arrow = qs(".arrow-box", root); if (arrow) { toggle(arrow, "opacity-70", !on); toggle(arrow, "!bg-token-warning-900-12", on); }
-    var tag = qs(".bg-token-caution-900-3.p-\\[3px\\]", root); if (tag) toggle(tag, "!bg-token-warning-500", on);
-  }
-  function updateLegal(plan) {
-    // texto legal: "R$118.00 cobrado hoje, depois R$315 a cada 30 dias"
-    qsa(".text-var").forEach(function (el) {
-      var parent = el.parentElement;
-      var spans = qsa(".text-var", parent);
-      if (spans.length >= 3) {
-        spans[0].textContent = "R$" + plan.today;
-        spans[1].textContent = "R$" + plan.renew;
-        spans[2].textContent = String(plan.days);
-      }
-    });
   }
   function bindOfferFaq() {
     qsa(".bg-token-caution-950").forEach(function (item) {

@@ -43,3 +43,24 @@ main[data-msg][data-oneline] h1 { font-size: clamp(20px, 6.4vw, 24px) !important
 .scratch-target, .scratch-target canvas.sc__canvas { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 canvas.sc__canvas { transition: opacity .35s ease; }
 canvas.sc__canvas.is-revealed { opacity: 0; }
+
+/* Oferta: preço único, mesmo card do CalmKids (ribbon "Mais popular" + nome do plano + preço), nas cores da Alpha */
+.plan-options { display: grid; gap: 12px; width: 100%; }
+.plan-card {
+  position: relative; display: flex; width: 100%; min-height: 102px; align-items: center;
+  border: 2px solid rgb(155, 124, 80); border-radius: 18px; background: #fff;
+  margin-top: 13px; padding: 27px 17px 20px; text-align: left;
+  box-shadow: 0 7px 20px rgb(155 124 80 / 12%);
+}
+.plan-card__ribbon {
+  position: absolute; top: -17px; left: -2px; right: -2px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 16px 16px 0 0; background: rgb(155, 124, 80); color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase;
+}
+.plan-card__ribbon span { margin-right: 5px; color: #f7c951; }
+.plan-card__info { flex: 1; }
+.plan-card__info strong { display: block; color: #2b2b2b; font-size: 16px; font-weight: 700; text-transform: uppercase; }
+.plan-card__price-full { margin-left: 10px; color: rgb(155, 124, 80); font-size: 20px; font-weight: 700; white-space: nowrap; }
+/* O halo pulsante do botão de compra (.btn_pulse) passa da borda: sem isto a oferta rola 2px para o lado no celular */
+.offer-page #app .h-full.overflow-y-auto { overflow-x: hidden; }

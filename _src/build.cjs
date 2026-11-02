@@ -198,6 +198,17 @@ S.forEach((s, i) => {
   funnel.screens[s.id] = o;
 });
 
+// Sem captura de e-mail: saem as telas de e-mail (6 variantes) e a de assinatura de e-mails ("Deseja receber e-mails...?").
+// Quem apontava para elas passa a apontar para a tela seguinte (a do nome).
+const removed = (id) => funnel.screens[id] && (funnel.screens[id].type === "emailScreen" || funnel.screens[id].name === "subscribePage");
+const skip = (id) => { while (id && removed(id)) id = funnel.screens[id].next; return id; };
+for (const o of Object.values(funnel.screens)) {
+  o.next = skip(o.next);
+  (o.options || []).forEach((a) => (a.next = skip(a.next)));
+  (o.variants || []).forEach((v) => (v.next = skip(v.next)));
+}
+for (const id of Object.keys(funnel.screens)) if (removed(id)) { delete funnel.screens[id]; delete screensHtml[id]; }
+
 // ---------- oferta ----------
 let offer = baseClean(fs.readFileSync(path.join(__dirname, "dom", "offer-app.html"), "utf8"));
 offer = offer.replace(/^<div id="app"[^>]*>/, "").replace(/<\/div>\s*$/, "");
@@ -244,6 +255,42 @@ const extra = {};
     .replace("Aqui está <b>7 minutos extras</b>", "Aqui estão <b>7 minutos extras</b>")
     .replace("Use o meu tempo extra", "Usar meu tempo extra");
 }
+
+// Oferta com preço único (mesmo card do CalmKids): os dois seletores de 3 planos (headlessui-radiogroup-*)
+// viram um card só, "Plano de 4 semanas — R$ 47,00". Visual em css/app.css (.plan-card).
+const SINGLE_PLAN =
+  '<div class="plan-options"><div class="plan-card plan-card--popular is-selected" id="product-single">' +
+  '<span class="plan-card__ribbon"><span>★</span>Mais popular</span>' +
+  '<span class="plan-card__info"><strong>Plano de 4 semanas</strong></span>' +
+  '<span class="plan-card__price-full">R$ 47,00</span></div></div>';
+function singlePlan(h) {
+  const re = /<div[^>]*id="headlessui-radiogroup-\d+"[^>]*>/g;
+  let m, out = "", last = 0;
+  while ((m = re.exec(h))) {
+    // fim do bloco: o </div> que fecha a div aberta em m.index
+    let depth = 0, i = m.index;
+    const tag = /<(\/?)div\b[^>]*>/g;
+    tag.lastIndex = i;
+    let t;
+    while ((t = tag.exec(h))) { depth += t[1] ? -1 : 1; if (!depth) break; }
+    out += h.slice(last, m.index) + SINGLE_PLAN;
+    last = tag.lastIndex;
+    re.lastIndex = last;
+  }
+  out += h.slice(last);
+  // As variantes foram capturadas com o botão de compra ainda "carregando" (disabled + ícone girando):
+  // volta ao estado normal, igual à oferta padrão (dourado, com pulso).
+  out = out
+    .replace(/(<button[^>]*id="qz-button-continue"[^>]*?)( !h-\[56px\] w-full)" disabled="">/g, '$1$2 btn_pulse">')
+    .replace(/<svg aria-hidden="true" role="status"[^>]*animate-spin[^>]*>[\s\S]*?<\/svg>/g, "");
+  // texto legal: sai a assinatura com renovação (e o e-mail de suporte do site original), entra o pagamento único
+  return out.replace(
+    /(<div[^>]*class="payment-text-block[^"]*"[^>]*>)[\s\S]*?(<\/div>)/g,
+    "$1<span>Pagamento único de R$ 47,00, sem renovação automática. Garantia de reembolso de 30 dias.</span>$2"
+  );
+}
+offer = singlePlan(offer);
+for (const goal in offerVariants) for (const st in offerVariants[goal]) offerVariants[goal][st] = singlePlan(offerVariants[goal][st]);
 
 // .png -> .webp quando existir a versão WebP (gerada por _src/optimize-images.py)
 const preferWebp = (s) =>
