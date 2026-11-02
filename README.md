@@ -5,11 +5,15 @@ Funil de quiz em HTML, CSS e JavaScript puro, até a página de oferta.
 - `quiz-pt-br/`: o quiz. Roda sozinho, sem dependências e sem `_src/`. Instruções, estrutura e pendências em [quiz-pt-br/README.md](quiz-pt-br/README.md).
 - `_src/`: capturas do quiz de referência, grafo do funil e scripts que geram `quiz-pt-br/js/*-data.js` (`node _src/build.cjs`).
 
+## Deploy
+
+Vercel, conectada a este repositório. O `vercel.json` da raiz publica só a pasta `quiz-pt-br/` (sem build) e define o cache.
+
 ## Rodar
 
 ```
-git clone https://github.com/GrupoRME/quiz-conquista.git
-cd quiz-conquista/quiz-pt-br
+git clone https://github.com/Ricardo-Roque/alpha-academy.git
+cd alpha-academy/quiz-pt-br
 node serve.cjs 8080
 ```
 

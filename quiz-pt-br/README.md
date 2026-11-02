@@ -47,7 +47,6 @@ assets/fonts/         fontes .woff2 (subsets latin e latin-ext)
 QUIZ_AUDIT.md         inventário das 116 telas, ramificações, checklist de testes, diferenças
 QUIZ_TRANSLATIONS.md  tabela de traduções (EN → pt-BR) e exceções
 serve.cjs             servidor estático mínimo (opcional)
-vercel.json, _headers cache por tipo de arquivo (Vercel / Netlify e Cloudflare Pages)
 ```
 
 Os arquivos `js/*-data.js` são gerados por `../_src/build.cjs` a partir de `../_src/funnel.json` e do DOM capturado em `../_src/dom/`
@@ -62,6 +61,8 @@ Mesmo padrão do CalmKids/CalmBaby:
 - Fotos em WebP (qualidade 80, largura máxima de 686 px); as 4 fotos da primeira tela têm preload.
 - Ao abrir cada tela, as imagens das próximas telas possíveis são baixadas em segundo plano.
 - Pixel do Meta (`2261664578012228`) e UTMify no topo do `<head>`, antes de qualquer CSS, com `preconnect` para os dois domínios.
+
+Deploy: Vercel, pelo `vercel.json` da raiz do repositório (publica só esta pasta, `outputDirectory: quiz-pt-br`, e define o cache por tipo de arquivo). No painel da Vercel o Root Directory fica vazio (raiz).
 
 Depois de trocar imagens ou capturas, rode (na raiz do repositório): `python _src/optimize-images.py` (PNG pesado → WebP), `node _src/build.cjs` (passa a usar o `.webp` onde existir) e `node _src/purge-css.cjs` (se novas telas usarem classes CSS novas, rode o purge a partir do `css/style.css` original do git).
 
