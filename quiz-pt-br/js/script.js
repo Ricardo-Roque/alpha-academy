@@ -55,6 +55,54 @@
   function html(str) { return nodesFrom(str.trim())[0]; }
   function mount(el, str) { el.textContent = ""; nodesFrom(str).forEach(function (n) { el.appendChild(n); }); }
   function hideLoader() { if (loaderEl) loaderEl.hidden = true; }
+  function showLoader() { if (loaderEl) loaderEl.hidden = false; }
+
+  // ---------------------------------------------------------------- carregamento sob demanda
+  // A oferta (~1,2 MB) não entra no carregamento inicial: baixa em segundo plano durante o quiz
+  // e, se ainda não chegou, na hora em que for usada (raspadinha ou #/offer).
+  var offerWaiters = [], offerLoading = false;
+  function loadOffer(cb) {
+    if (OFFER) { if (cb) cb(); return; }
+    if (cb) offerWaiters.push(cb);
+    if (offerLoading) return;
+    offerLoading = true;
+    var sc = document.createElement("script");
+    sc.src = "js/offer-data.js";
+    sc.onload = function () {
+      OFFER = window.QUIZ_OFFER;
+      offerWaiters.splice(0).forEach(function (fn) { fn(); });
+    };
+    sc.onerror = function () { offerLoading = false; sc.remove(); }; // tenta de novo no próximo pedido
+    document.head.appendChild(sc);
+  }
+  function whenIdle(fn, delay) {
+    setTimeout(function () {
+      if (window.requestIdleCallback) requestIdleCallback(fn, { timeout: 3000 });
+      else fn();
+    }, delay || 0);
+  }
+
+  // Imagens das próximas telas possíveis baixam enquanto o usuário lê a atual: a troca de tela fica instantânea.
+  var prefetched = {};
+  function prefetchImages(markup) {
+    var re = /src="(assets\/[^"]+)"/g, m;
+    while ((m = re.exec(markup))) {
+      if (prefetched[m[1]]) continue;
+      prefetched[m[1]] = true;
+      new Image().src = m[1];
+    }
+  }
+  function prefetchNext(s) {
+    var ids = [s.next];
+    (s.options || []).forEach(function (o) { ids.push(o.next); });
+    whenIdle(function () {
+      ids.forEach(function (id) {
+        var guard = 0;
+        while (id && FUNNEL.screens[id] && FUNNEL.screens[id].type === "condition" && guard++ < 20) id = resolveCondition(FUNNEL.screens[id]);
+        if (id && SCREENS[id]) prefetchImages(SCREENS[id]);
+      });
+    });
+  }
 
   // ---------------------------------------------------------------- navegação
   function currentRoute() {
@@ -173,6 +221,7 @@
     }[s.type];
     if (binder) binder(s, id);
     else bindContinue(s);
+    prefetchNext(s);
   }
 
   function bindCommon() {
@@ -436,6 +485,7 @@
     canvas.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
   }
   function showScratchPopup() {
+    if (!OFFER) return loadOffer(showScratchPopup);
     var pop = html(OFFER.scratchPopup);
     // entrada com fade (mesma classe de transição do original: opacity .1s)
     pop.classList.add("fadePopup-enter-from", "fadePopup-enter-active");
@@ -729,6 +779,10 @@
     { id: "product-3", today: "430.00", renew: "660", days: 180 }
   ];
   function renderOffer() {
+    if (!OFFER) {
+      showLoader();
+      return loadOffer(function () { if (currentRoute() === "offer") render(); });
+    }
     document.documentElement.classList.add("offer-page");
     // a oferta muda conforme objetivo, status e idade respondidos (como no original); sem respostas usa a versão padrão
     var variant = OFFER.variants && OFFER.variants[state.vars.goal] && OFFER.variants[state.vars.goal][state.vars.relationship_status];
@@ -841,4 +895,6 @@
   // ---------------------------------------------------------------- init
   window.addEventListener("hashchange", render);
   render();
+  // oferta em segundo plano, depois que a primeira tela já apareceu e a rede ficou livre
+  whenIdle(function () { loadOffer(); }, 4000);
 })();

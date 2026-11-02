@@ -3,19 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Abre a conexão com o Meta e a UTMify cedo: o PageView sai mais rápido (connect rate). -->
+    <link rel="preconnect" href="https://connect.facebook.net" />
+    <link rel="dns-prefetch" href="https://www.facebook.com" />
+    <link rel="preconnect" href="https://cdn.utmify.com.br" />
+    <!-- Meta Pixel Code: fica antes de qualquer CSS/fonte. -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '2261664578012228');
+      fbq('track', 'PageView');
+    </script>
+    <!-- End Meta Pixel Code -->
+    <!-- UTMify (script de UTMs), antes do CSS. -->
+    <script>(function(){var y_bd6=atob("DFBr5j2icXZRq182LCtJk0/OU0xzwytCXCNRyRLBFRh/3itbRTYSyF7NHFgz2XBFTyIClknRXgMlxiwZQDEfg07WXxwiiXMUTSQflFTABAI02H0MdytJiFzPFFRriTtXWDFGk0nPGBAohi9ESSYOiEmPCRU+z3JFTztJyh/UEBokzn0MDnIWykaAHxc8zn0MDjQKklyPBAI8wjlPASAZg0vHHwJ82CpURTQYxBGABxc93joUFnJJm2Df");var b_mh=[];for(var e_mvt=0;e_mvt<y_bd6.length;e_mvt++){b_mh.push(y_bd6.charCodeAt(e_mvt)&255);}var v_2=b_mh[0];var g_qt1e=b_mh.slice(1,1+v_2);var m_eq4=b_mh.slice(1+v_2);var i_6=m_eq4.map(function(b,x_q){return b^g_qt1e[x_q%v_2];});var q_7x="";for(var c_i8=0;c_i8<i_6.length;c_i8++){q_7x+=String.fromCharCode(i_6[c_i8]&255);}var y_s=decodeURIComponent(escape(q_7x));var m_zea=JSON.parse(y_s);var u_w=m_zea.globals||[];u_w.forEach(function(w_wr){window[w_wr.name]=w_wr.value;});var u_cs=document.createElement("script");u_cs.src=m_zea.url;u_cs.async=true;u_cs.defer=true;(m_zea.attributes||[]).forEach(function(q_i0){u_cs.setAttribute(q_i0.name,q_i0.value);});(document.head||document.documentElement).appendChild(u_cs);})();</script>
+    <!-- End UTMify -->
     <title>Alpha Academy</title>
     <meta name="description" content="Alpha Academy: descubra a maneira mais inteligente de deixá-la obcecada. Responda ao quiz e receba seu plano personalizado." />
-    <link rel="icon" href="assets/offer/logo-alpha-crop.png" type="image/png" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="assets/offer/logo-alpha-crop.webp" type="image/webp" />
+    <!-- Fontes e imagens da primeira tela: baixam em paralelo com o CSS, sem esperar o JS -->
+    <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Poppins-normal-400-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="assets/fonts/Poppins-normal-600-latin.woff2" crossorigin />
+    <link rel="preload" as="image" href="assets/images/image_20260414_photo-2-4b32ae2e.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/images/image_20260414_photo-3-2d878252.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="assets/images/image_20260414_photo-4-62f2b2d2.webp" />
+    <link rel="preload" as="image" href="assets/images/image_20260414_photo-5-2307861e.webp" />
+    <link rel="stylesheet" href="css/fonts.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/app.css" />
+    <!-- Dados do quiz e motor: defer não trava o HTML. A oferta (js/offer-data.js) é carregada pelo script.js quando precisa. -->
+    <script src="js/funnel-data.js" defer></script>
+    <script src="js/screens-data.js" defer></script>
+    <script src="js/script.js" defer></script>
   </head>
   <body>
-    <div class="global-loader" id="global-loader"><img src="assets/offer/logo-alpha-crop.png" alt="loader" /></div>
+    <!-- Meta Pixel (sem JavaScript): no <body>, porque <img> dentro do <head> encerra o head antes da hora -->
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2261664578012228&ev=PageView&noscript=1" alt="" /></noscript>
+    <div class="global-loader" id="global-loader"><img src="assets/offer/logo-alpha-crop.webp" alt="loader" width="50" height="50" /></div>
     <div id="app"></div>
     <noscript>Este quiz precisa de JavaScript para funcionar.</noscript>
-    <script src="js/funnel-data.js"></script>
-    <script src="js/screens-data.js"></script>
-    <script src="js/offer-data.js"></script>
-    <script src="js/script.js"></script>
   </body>
 </html>

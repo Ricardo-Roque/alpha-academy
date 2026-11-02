@@ -245,8 +245,15 @@ const extra = {};
     .replace("Use o meu tempo extra", "Usar meu tempo extra");
 }
 
+// .png -> .webp quando existir a versão WebP (gerada por _src/optimize-images.py)
+const preferWebp = (s) =>
+  s.replace(/assets\/[\w./-]+\.png/g, (p) => (fs.existsSync(path.join(root, p.slice(0, -4) + ".webp")) ? p.slice(0, -4) + ".webp" : p));
+// \r\n das capturas (checkout no Windows) vira \n: o build gera a mesma saída em qualquer sistema
 const out = (name, varName, obj) =>
-  fs.writeFileSync(path.join(root, "js", name), `/* Gerado por _src/build.cjs — não editar à mão */\nwindow.${varName} = ${JSON.stringify(obj)};\n`);
+  fs.writeFileSync(
+    path.join(root, "js", name),
+    `/* Gerado por _src/build.cjs — não editar à mão */\nwindow.${varName} = ${preferWebp(JSON.stringify(obj).replace(/\\r\\n/g, "\\n"))};\n`
+  );
 out("funnel-data.js", "QUIZ_FUNNEL", funnel);
 out("screens-data.js", "QUIZ_SCREENS", screensHtml);
 out("offer-data.js", "QUIZ_OFFER", { html: offer, variants: offerVariants, ageImg: offerAgeImg, scratchPopup: extra.scratchPopup, extraTimePopup: extra.extraTimePopup });
