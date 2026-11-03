@@ -1,0 +1,3 @@
+# Mínimo para publicar a função. Rode `supabase init` para gerar o resto se precisar.
+[functions.track-alpha]
+verify_jwt = false

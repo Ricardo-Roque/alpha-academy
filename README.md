@@ -3,6 +3,7 @@
 Funil de quiz em HTML, CSS e JavaScript puro, até a página de oferta.
 
 - `quiz-pt-br/`: o quiz. Roda sozinho, sem dependências e sem `_src/`. Instruções, estrutura e pendências em [quiz-pt-br/README.md](quiz-pt-br/README.md).
+- `supabase/`: registro das respostas do quiz (tabela `alpha_sessions`, Edge Function `track-alpha`). Ver [supabase/README.md](supabase/README.md).
 - `_src/`: capturas do quiz de referência, grafo do funil e scripts que geram `quiz-pt-br/js/*-data.js` (`node _src/build.cjs`).
 
 ## Deploy

@@ -41,6 +41,7 @@ js/funnel-data.js     grafo do funil: telas, próximas telas, condições, vari�
 js/screens-data.js    markup de cada tela, em pt-BR                                (gerado)
 js/offer-data.js      página da oferta + popups, em pt-BR; carregado sob demanda   (gerado)
 js/script.js          motor: rotas por hash, condições, validação, loader, raspadinha, oferta
+js/track.js           registro das respostas no Supabase (fila em segundo plano; desligado em localhost)
 assets/images/        imagens das telas e da oferta (fotos em WebP, ícones pequenos em PNG)
 assets/offer/ misc/   logo, selos de pagamento, imagens da raspadinha
 assets/fonts/         fontes .woff2 (subsets latin e latin-ext)
@@ -72,7 +73,8 @@ Resumo; detalhes em `QUIZ_AUDIT.md`:
 
 - Sem captura de e-mail: o build remove as 6 telas de e-mail e a de assinatura de e-mails; depois do carregamento o funil vai direto para a tela do nome (o `QUIZ_AUDIT.md` ainda lista essas telas, do original).
 
-- Telemetria (`event.fx2.io`), geolocalização por IP, verificação de e-mail já cadastrado: não reproduzidos.
+- Respostas, telas vistas, oferta e clique no checkout vão para o Supabase (`alpha_sessions`), pelo `js/track.js`; detalhes em [../supabase/README.md](../supabase/README.md).
+- Telemetria do original (`event.fx2.io`), geolocalização por IP, verificação de e-mail já cadastrado: não reproduzidos.
 - Páginas legais (`/terms`, `/privacy`, `/subterms`) abrem no site original, que só as publica em inglês.
 - Animação Lottie da raspadinha e animações do gráfico de plano: quadro estático / CSS.
 

@@ -34,6 +34,19 @@
     save();
   }
 
+  // Envio das respostas ao Supabase (js/track.js). Sem o script (bloqueio, rede), o quiz segue sem registrar.
+  function track(type, data, opts) {
+    try { if (window.aaTrack) window.aaTrack(type, data, opts); } catch (e) {}
+  }
+  // Chave: a variável do funil (goal, age, name...) ou, nas perguntas sem variável, o nome da tela.
+  function trackAnswer(s, value) { track("answer", { key: s.variable || s.name, value: value }); }
+  var lastTracked = null;
+  function trackStep(idx, id) {
+    if (lastTracked === id) return; // mesma tela renderizada de novo (ex.: hashchange repetido)
+    lastTracked = id;
+    track("step", { idx: idx, id: id });
+  }
+
   // timers/handlers da tela atual (limpos a cada troca de tela)
   var cleanups = [];
   function onCleanup(fn) { cleanups.push(fn); }
@@ -210,6 +223,7 @@
     if (!markup) { return goTo(FUNNEL.start, { replace: true }); }
     document.documentElement.classList.remove("offer-page");
     document.body.style.overflow = "";
+    trackStep(s.i || 0, s.name || id);
     mount(app, markup);
     window.scrollTo(0, 0);
     hideLoader();
@@ -250,6 +264,7 @@
         list.forEach(function (t) { t.classList.remove("selected"); });
         tile.classList.add("selected");
         setVar(s.variable, opt.value);
+        trackAnswer(s, opt.value);
         setTimeout(function () { navigate(opt.next || s.next); }, 150);
       });
     });
@@ -271,6 +286,7 @@
         else if (s.options[list.indexOf(t)]) vals.push(s.options[list.indexOf(t)].value);
       });
       setVar(s.variable, vals);
+      return vals;
     }
     list.forEach(function (tile) {
       if (isOther(tile)) {
@@ -287,7 +303,7 @@
       tile.addEventListener("click", function () { tile.classList.toggle("selected"); sync(); });
     });
     if (btn) {
-      btn.addEventListener("click", function () { if (!btn.disabled) navigate(s.next); });
+      btn.addEventListener("click", function () { if (!btn.disabled) { trackAnswer(s, sync()); navigate(s.next); } });
     }
     sync();
   }
@@ -302,6 +318,7 @@
     function submit() {
       if (btn.disabled) return;
       setVar(s.variable, input.value.trim());
+      trackAnswer(s, input.value.trim());
       navigate(s.next);
     }
     input.addEventListener("input", sync);
@@ -526,6 +543,8 @@
     var profile = computeProfile(state.vars);
     setVar("confidence_score", profile.score);
     setVar("confidence_level", profile.level);
+    track("answer", { key: "confidence_score", value: profile.score });
+    track("answer", { key: "confidence_level", value: profile.level });
     var ui = profile.ui;
     // selo
     var badge = qs('div[class*="rounded-[4px]"][class*="px-2"]');
@@ -629,7 +648,9 @@
       app.appendChild(modal);
       qsa("button", modal).forEach(function (b) {
         b.addEventListener("click", function () {
-          setVar("loader_answer_" + (idx + 1), b.getAttribute("data-test") === "option-yes");
+          var yes = b.getAttribute("data-test") === "option-yes";
+          setVar("loader_answer_" + (idx + 1), yes);
+          track("answer", { key: "loader_answer_" + (idx + 1), value: yes });
           modal.remove();
           resume();
         });
@@ -750,6 +771,8 @@
     // a oferta muda conforme objetivo, status e idade respondidos (como no original); sem respostas usa a versão padrão
     var variant = OFFER.variants && OFFER.variants[state.vars.goal] && OFFER.variants[state.vars.goal][state.vars.relationship_status];
     mount(app, variant || OFFER.html);
+    if (lastTracked !== "offer") track("offer");
+    trackStep(200, "offer");
     var ageSrc = OFFER.ageImg && OFFER.ageImg[state.vars.age || "30-39"];
     var heroImg = qs(".compare-before-after-generated img");
     if (heroImg && ageSrc) heroImg.setAttribute("src", ageSrc);
@@ -759,7 +782,11 @@
     fillVars();
     // Todos os botões "Obter meu plano" levam ao checkout da Payt
     qsa("#qz-button-continue").forEach(function (b) {
-      b.addEventListener("click", function () { location.href = checkoutUrl(); });
+      b.addEventListener("click", function () {
+        // envia na hora (keepalive): a página sai logo em seguida
+        track("checkout", {}, { now: true });
+        location.href = checkoutUrl();
+      });
     });
     bindOfferTimer();
     bindOfferFaq();
